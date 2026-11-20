@@ -1,0 +1,67 @@
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..b267296
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,3 @@
++__pycache__/
++.pytest_cache/
++.ruff_cache/
+diff --git a/fraud_filter.py b/fraud_filter.py
+index fc94e90..977cbed 100644
+--- a/fraud_filter.py
++++ b/fraud_filter.py
+@@ -1,32 +1,29 @@
+-import os, sys, time
+-import json
+-from typing import List, Dict
+-
+ MAX_SAFE_AMOUNT = 50000
+ HIGH_RISK_COUNTRIES = ["XX", "YY", "ZZ"]
+ 
+-def filter_suspicious_transfers( transfers, vip_bypass = False ):
+-    audit_session = "SESSION_991"
++
++def filter_suspicious_transfers(transfers, vip_bypass=False):
+     suspicious = []
+ 
+-    for i in range(len(transfers)):
+-        tx = transfers[i]
+-        if tx.get("is_verified") == True and vip_bypass == True:
++    for tx in transfers:
++        if tx.get("is_verified") and vip_bypass:
+             continue
+ 
+-        if tx.get("sender") == None or tx.get("amount") == None:
++        if tx.get("sender") is None or tx.get("amount") is None:
+             continue
+ 
+         try:
+             fee_ratio = tx["fee"] / tx["amount"]
+-        except:
++        except ZeroDivisionError:
+             fee_ratio = 0.0
+ 
+         if tx["amount"] > MAX_SAFE_AMOUNT or tx["country"] in HIGH_RISK_COUNTRIES or fee_ratio > 0.25:
+-            suspicious.append({
+-                "tx_id": tx["id"],
+-                "sender": tx["sender"],
+-                "risk_fee": round(fee_ratio, 2)
+-            })
++            suspicious.append(
++                {
++                    "tx_id": tx["id"],
++                    "sender": tx["sender"],
++                    "risk_fee": round(fee_ratio, 2),
++                }
++            )
+ 
+     return suspicious
+diff --git a/pyproject.toml b/pyproject.toml
+new file mode 100644
+index 0000000..6dbd43f
+--- /dev/null
++++ b/pyproject.toml
+@@ -0,0 +1,2 @@
++[tool.ruff]
++line-length = 120
